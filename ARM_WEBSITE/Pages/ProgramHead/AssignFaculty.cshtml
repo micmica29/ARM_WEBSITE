@@ -1,0 +1,308 @@
+﻿@page
+@model ARM_WEBSITE.Pages.ProgramHead.AssignFacultyModel
+@{
+    ViewData["Title"] = "Assign Faculty";
+    Layout = null;
+
+    var days = new string[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+    var timeSlots = Enumerable.Range(0, 26).Select(i =>
+    {
+        int hour = 7 + (i / 2);
+        string min = i % 2 == 0 ? "00" : "30";
+        int endHour = hour + (i % 2 == 0 ? 0 : 1);
+        string endMin = i % 2 == 0 ? "30" : "00";
+        string displayHour = (hour > 12 ? hour - 12 : hour).ToString();
+        string displayEndHour = (endHour > 12 ? endHour - 12 : endHour).ToString();
+        string ampm = hour < 12 ? "AM" : "PM";
+        string endAmpm = endHour < 12 ? "AM" : "PM";
+        return $"{displayHour}:{min} {ampm} - {displayEndHour}:{endMin} {endAmpm}";
+    }).ToArray();
+
+    // Sample professors
+    var professors = new List<dynamic> {
+        new { Id="prof1", Name="Prof. Santos", Color="#FFB6C1", Hours=1 },
+        new { Id="prof2", Name="Prof. Dela Cruz", Color="#87CEFA", Hours=1 },
+        new { Id="prof3", Name="Prof. Reyes", Color="#90EE90", Hours=1 }
+    };
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faculty Assignment</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            height: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: #003366;
+            color: white;
+            padding: 20px;
+            font-size: 18px;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+            .sidebar h2 {
+                text-align: center;
+                margin-bottom: 20px;
+                font-size: 20px;
+                font-weight: 600;
+                border-bottom: 2px solid #0055aa;
+                padding-bottom: 10px;
+            }
+
+        #professorsList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .professor {
+            border: 1px solid #aaa;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: grab;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: black;
+            font-weight: 600;
+        }
+
+            .professor:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+
+        /* Content */
+        .content {
+            flex: 1;
+            padding: 25px;
+            font-size: 18px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-create {
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            background: green;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+            .btn-create:hover {
+                background: #0055aa;
+            }
+
+        /* Schedule Table */
+        #scheduleTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+            #scheduleTable th, #scheduleTable td {
+                border: 1px solid #ccc;
+                text-align: center;
+                vertical-align: middle;
+                padding: 0;
+                width: 120px;
+                height: 60px;
+                position: relative;
+            }
+
+        td.slot {
+            overflow: hidden;
+        }
+
+        .professor-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 2px;
+            box-sizing: border-box;
+        }
+
+        button.remove {
+            font-size: 0.8rem;
+            background: tomato;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-area">
+        <div class="sidebar">
+            <h2>Professors</h2>
+            <div id="professorsList"></div>
+        </div>
+
+        <div class="content">
+            <div class="header-row">
+                <h2>Faculty Schedule</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-create" onclick="alert('Open modal')">➕ Create Schedule</button>
+                    <button class="btn-create" style="background:#0056d2;" onclick="saveSchedule()">💾 Save</button>
+                </div>
+            </div>
+
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        @foreach (var day in days)
+                        {
+                            <th>@day</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int r = 0; r < timeSlots.Length; r++)
+                    {
+                        <tr>
+                            <td>@timeSlots[r]</td>
+                            @foreach (var day in days)
+                            {
+                                <td class="slot" data-key="@($"{day}_{r}")"></td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const days = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(days));
+        let professors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(professors));
+        const schedule = {};
+        const professorsList = document.getElementById("professorsList");
+
+        function renderSidebar() {
+            professorsList.innerHTML = "";
+            professors.forEach(prof => {
+                const div = document.createElement("div");
+                div.className = "professor";
+                div.draggable = true;
+                div.textContent = prof.Name;
+                div.style.backgroundColor = prof.Color;
+                div.dataset.hours = prof.Hours;
+                div.addEventListener("dragstart", e => e.dataTransfer.setData("professor", JSON.stringify(prof)));
+                professorsList.appendChild(div);
+            });
+        }
+
+        // Drag & Drop
+        document.querySelectorAll("td.slot").forEach(td => {
+            td.addEventListener("dragover", e => e.preventDefault());
+            td.addEventListener("drop", e => {
+                const prof = JSON.parse(e.dataTransfer.getData("professor"));
+                const rowIndex = parseInt(td.dataset.key.split("_")[1]);
+                const slotCount = Math.round(prof.Hours*2);
+
+                // Return previous prof(s) to sidebar if slot(s) occupied
+                for(let i=0;i<slotCount;i++){
+                    const key=`${td.dataset.key.split("_")[0]}_${rowIndex+i}`;
+                    if(schedule[key]){
+                        const prev=schedule[key];
+                        if(!professors.some(p=>p.Id===prev.Id)) professors.push(prev);
+                        delete schedule[key];
+                        const tdPrev=document.querySelector(`td[data-key='${key}']`);
+                        if(tdPrev){ tdPrev.innerHTML=""; tdPrev.style.backgroundColor=""; tdPrev.style.display=""; tdPrev.rowSpan=1; tdPrev.style.color=""; }
+                    }
+                }
+
+                td.rowSpan=slotCount;
+                td.innerHTML=""; td.style.backgroundColor=prof.Color; td.style.color="#000";
+
+                const container=document.createElement("div");
+                container.className="professor-content";
+                const title=document.createElement("div"); title.textContent=prof.Name;
+                container.appendChild(title);
+
+                const btn=document.createElement("button");
+                btn.className="remove"; btn.textContent="Remove";
+                btn.onclick=()=>{
+                    for(let i=0;i<slotCount;i++){
+                        const key=`${td.dataset.key.split("_")[0]}_${rowIndex+i}`;
+                        delete schedule[key];
+                        const tdSlot=document.querySelector(`td[data-key='${key}']`);
+                        if(tdSlot){ tdSlot.innerHTML=""; tdSlot.style.backgroundColor=""; tdSlot.style.color=""; tdSlot.style.display=""; tdSlot.rowSpan=1; }
+                    }
+                    if(!professors.some(p=>p.Id===prof.Id)) professors.push(prof);
+                    renderSidebar();
+                };
+                container.appendChild(btn);
+                td.appendChild(container);
+
+                for(let i=0;i<slotCount;i++){
+                    const key=`${td.dataset.key.split("_")[0]}_${rowIndex+i}`;
+                    schedule[key]=prof;
+                    if(i>0){ document.querySelector(`td[data-key='${key}']`).style.display="none"; }
+                }
+
+                professors = professors.filter(p=>p.Id!==prof.Id);
+                renderSidebar();
+            });
+        });
+
+        renderSidebar();
+        function saveSchedule(){ alert("Schedule saved!"); }
+    </script>
+</body>
+</html>

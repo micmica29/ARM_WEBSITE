@@ -1,0 +1,458 @@
+﻿@page
+@model ARM_WEBSITE.Pages.ProgramHead.NonWorkingHoursModel
+@{
+    ViewData["Title"] = "NonWorkingHours";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Non-Working Hours - Drag Select Demo</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        .left-panel {
+            background: linear-gradient(135deg,#3b82f6,#60a5fa);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 6px 18px rgba(59,130,246,0.12);
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.12);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .schedule-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+        }
+
+        .nav-tabs .nav-link {
+            border-radius: 30px;
+            padding: 8px 18px;
+            margin-right: 8px;
+            font-weight: 600;
+        }
+
+            .nav-tabs .nav-link.active {
+                background: #3b82f6;
+                color: #fff !important;
+                border: none;
+            }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+            .controls .left {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .controls .right {
+                display: flex;
+                gap: 8px;
+            }
+
+        .table-schedule {
+            font-size: 0.86rem;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            .table-schedule th, .table-schedule td {
+                border: 1px solid #e6e9ee;
+                padding: 8px;
+                text-align: center;
+                min-width: 110px;
+                vertical-align: middle;
+            }
+
+        .table-responsive-slim {
+            max-height: 520px;
+            overflow: auto;
+            border-radius: 6px;
+        }
+
+        /* cell states */
+        .cell-select {
+            background: rgba(59,130,246,0.12);
+            outline: 2px dashed rgba(59,130,246,0.35);
+        }
+
+        .cell-admin {
+            background: #f87171;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 6px;
+        }
+
+        .cell-consult {
+            background: #34d399;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 6px;
+        }
+
+        .cell-assigned {
+            padding: 6px 8px;
+            display: inline-block;
+            border-radius: 6px;
+        }
+
+        /* small helpers */
+        .hint {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        td.slot {
+            cursor: pointer;
+            user-select: none;
+        }
+        /* Prevent text selection while dragging */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
+</head>
+<body class="no-select">
+    <div class="container-fluid mt-4">
+        <div class="row g-4">
+            <!-- Left panel -->
+            <div class="col-md-3">
+                <div class="left-panel">
+                    <h5 class="mb-2">@@Model?.FacultyName ?? "Professor Name"</h5>
+                    <div class="info-box">Shift: @@Model?.Shift ?? "Full-time"</div>
+                    <div class="info-box">Total Units: @@Model?.TotalUnits ?? "0"</div>
+                    <div class="info-box">Consultation: <span id="totalConsult">0</span> hrs</div>
+                    <div class="info-box">Admin: <span id="totalAdmin">0</span> hrs</div>
+                </div>
+            </div>
+
+            <!-- Right content -->
+            <div class="col-md-9">
+                <div class="schedule-container">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h4 class="mb-1">Non-Working Hours Assignment</h4>
+                            <div class="hint">Use click + drag to select time ranges. Release to assign based on active tab. Click an assigned cell to remove it.</div>
+                        </div>
+                        <div>
+                            <div class="btn-group" role="group">
+                                <button id="clearAllBtn" class="btn btn-outline-danger btn-sm">Clear All</button>
+                                <button id="saveBtn" class="btn btn-success btn-sm">Save</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- tabs -->
+                    <ul class="nav nav-tabs mb-3" id="hoursTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button">Administrative</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="consult-tab" data-bs-toggle="tab" data-bs-target="#consult" type="button">Consultation</button>
+                        </li>
+                    </ul>
+
+                    <!-- controls (HIDDEN buttons since they don’t actually do anything) -->
+                    <div class="controls mb-2" style="display:none;">
+                        <div class="left">
+                            <div class="form-inline">
+                                <label class="me-2 hint">Quick controls</label>
+                                <button id="selectModeBtn" class="btn btn-outline-primary btn-sm">Drag-select mode</button>
+                                <button id="toggleClickAssignBtn" class="btn btn-outline-secondary btn-sm">Toggle Click Assign</button>
+                            </div>
+                        </div>
+                        <div class="right">
+                            <span class="hint me-2">Active: <strong id="activeModeLabel">Administrative</strong></span>
+                        </div>
+                    </div>
+
+
+                    <!-- schedule table (time slots) -->
+                    <div class="table-responsive-slim">
+                        <table class="table table-schedule">
+                            <thead>
+                                <tr>
+                                    <th style="width:170px;">Time</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                    <th>Saturday</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleBody">
+                                @* Generate 7:00AM - 8:00PM in 30-min intervals *@
+                                @{
+                                    var startHour = 7;
+                                    var endHour = 20;
+                                    for (int hour = startHour; hour <= endHour; hour++)
+                                    {
+                                        for (int half = 0; half < 2; half++)
+                                        {
+                                            var start = new DateTime(1, 1, 1, hour, half == 0 ? 0 : 30, 0);
+                                            var end = start.AddMinutes(30);
+                                            var display = start.ToString("h:mm tt") + " - " + end.ToString("h:mm tt");
+                                        }
+                                    }
+                                }
+                                <!-- We'll render rows with JS for better control; rows created by JS below -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Setup and helpers ----------
+        // Create the time slots as in your CreateSchedule (7:00 AM - 8:00 PM, 30-min)
+        (function buildTable() {
+          const tbody = document.getElementById('scheduleBody');
+          const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          const timeSlots = [];
+          for (let i = 0; i < 26; i++) { // 26 half-hour slots from 7:00 to 20:30 -> last show 8:00 PM end
+            const hour = 7 + Math.floor(i / 2);
+            const min = (i % 2 === 0) ? '00' : '30';
+            const start = new Date(2000,0,1,hour, min==='00'?0:30);
+            const end = new Date(start.getTime() + 30*60000);
+            const label = start.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'}) + ' - ' + end.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+            timeSlots.push(label);
+          }
+
+          timeSlots.forEach((label, rowIndex) => {
+            const tr = document.createElement('tr');
+            const tdTime = document.createElement('td');
+            tdTime.textContent = label;
+            tr.appendChild(tdTime);
+
+            days.forEach((d, col) => {
+              const td = document.createElement('td');
+              td.className = 'slot';
+              // data-key to uniquely reference slot
+              td.dataset.key = `${d}_${rowIndex}`;
+              td.dataset.status = 'none'; // none | admin | consult
+              td.addEventListener('mousedown', handleMouseDown);
+              td.addEventListener('mouseenter', handleMouseEnter);
+              td.addEventListener('mouseup', handleMouseUp);
+              td.addEventListener('click', handleClickCell);
+              tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+          });
+        })();
+
+        // State
+        let isMouseDown = false;
+        let dragSelecting = false;
+        let currentSelection = new Set(); // data-key strings
+        let clickAssignMode = false; // toggles whether single click assigns
+        const adminClass = 'cell-admin';
+        const consultClass = 'cell-consult';
+        const selectClass = 'cell-select';
+
+        // Active type depends on active tab
+        function getActiveType() {
+          const adminTab = document.getElementById('admin-tab');
+          return adminTab.classList.contains('active') ? 'admin' : 'consult';
+        }
+
+        function updateActiveLabel() {
+          document.getElementById('activeModeLabel').textContent = getActiveType() === 'admin' ? 'Administrative' : 'Consultation';
+        }
+
+        // ---------- Mouse handlers for drag-select ----------
+        function handleMouseDown(e) {
+          // left mouse only
+          if (e.button !== 0) return;
+          isMouseDown = true;
+          dragSelecting = true;
+          const td = e.currentTarget;
+          addToSelection(td);
+          // prevent text selection
+          e.preventDefault();
+        }
+
+        function handleMouseEnter(e) {
+          if (!isMouseDown) return;
+          if (!dragSelecting) return;
+          addToSelection(e.currentTarget);
+        }
+
+        function handleMouseUp(e) {
+          if (!isMouseDown) return;
+          isMouseDown = false;
+          if (currentSelection.size > 0) {
+            finalizeSelection();
+          }
+          currentSelection.clear();
+          clearSelectVisuals();
+        }
+
+        // Single click to assign/unassign (if clickAssignMode)
+        function handleClickCell(e) {
+          if (dragSelecting && isMouseDown) return; // ignore click when dragging
+          if (!clickAssignMode) return;
+          const td = e.currentTarget;
+          const status = td.dataset.status;
+          if (status === 'none') {
+            applyAssignToSlots([td.dataset.key], getActiveType());
+          } else {
+            // unassign single
+            applyAssignToSlots([td.dataset.key], 'none');
+          }
+        }
+
+        // Add td to current selection visuals + set
+        function addToSelection(td) {
+          const key = td.dataset.key;
+          if (!currentSelection.has(key)) {
+            currentSelection.add(key);
+            td.classList.add(selectClass);
+          }
+        }
+
+        // Clear selection highlight visuals
+        function clearSelectVisuals() {
+          document.querySelectorAll('.' + selectClass).forEach(el => el.classList.remove(selectClass));
+        }
+
+        // Finalize selection: assign selected slots
+        function finalizeSelection() {
+          const keys = Array.from(currentSelection);
+          const type = getActiveType();
+          applyAssignToSlots(keys, type);
+        }
+
+        // Apply assignment to array of keys. type: 'admin' | 'consult' | 'none'
+        function applyAssignToSlots(keys, type) {
+          keys.forEach(k => {
+            const td = document.querySelector(`td[data-key='${k}']`);
+            if (!td) return;
+            td.dataset.status = type === 'none' ? 'none' : type;
+            td.innerHTML = ''; // clear cell
+            if (type === 'admin') {
+              const el = document.createElement('span'); el.className = 'cell-assigned ' + adminClass; el.textContent = 'ADMIN';
+              td.appendChild(el);
+            } else if (type === 'consult') {
+              const el = document.createElement('span'); el.className = 'cell-assigned ' + consultClass; el.textContent = 'CONSULT';
+              td.appendChild(el);
+            } else { /* none */ }
+          });
+          updateTotals();
+        }
+
+        // Update totals (simple count -> hours)
+        function updateTotals() {
+          const allTds = document.querySelectorAll('td.slot');
+          let adminCount = 0, consultCount = 0;
+          allTds.forEach(td => {
+            if (td.dataset.status === 'admin') adminCount++;
+            if (td.dataset.status === 'consult') consultCount++;
+          });
+          // each slot is 0.5 hour
+          document.getElementById('totalAdmin').textContent = (adminCount * 0.5).toFixed(1);
+          document.getElementById('totalConsult').textContent = (consultCount * 0.5).toFixed(1);
+        }
+
+        // Clear entire assignments
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+          if (!confirm('Clear all assigned non-working hours?')) return;
+          document.querySelectorAll('td.slot').forEach(td => {
+            td.dataset.status = 'none'; td.innerHTML = '';
+          });
+          updateTotals();
+        });
+
+        // Save button (placeholder)
+        document.getElementById('saveBtn').addEventListener('click', () => {
+          const assigned = [];
+          document.querySelectorAll('td.slot').forEach(td => {
+            if (td.dataset.status !== 'none') {
+              assigned.push({ key: td.dataset.key, status: td.dataset.status });
+            }
+          });
+          console.log('Assigned non-working hours:', assigned);
+          alert('Saved (demo) — check console for assigned slots.');
+          // Hook: send assigned array to backend via fetch/AJAX
+        });
+
+        // Toggle click-assign mode button
+        const toggleClickAssignBtn = document.getElementById('toggleClickAssignBtn');
+        toggleClickAssignBtn.addEventListener('click', () => {
+          clickAssignMode = !clickAssignMode;
+          toggleClickAssignBtn.classList.toggle('active', clickAssignMode);
+          toggleClickAssignBtn.textContent = clickAssignMode ? 'Click-assign ON' : 'Toggle Click Assign';
+        });
+
+        // Simple toggle button for select mode (for UX)
+        document.getElementById('selectModeBtn').addEventListener('click', () => {
+          alert('Click + drag on the table to select a range. Release mouse to assign based on active tab.');
+        });
+
+        // Tab change updates label
+        document.getElementById('admin-tab').addEventListener('shown.bs.tab', updateActiveLabel);
+        document.getElementById('consult-tab').addEventListener('shown.bs.tab', updateActiveLabel);
+
+        // Unassign a cell by clicking assigned cell (works even when not in click-assign mode)
+        // Add a delegated click listener to handle unassign clicks (if user clicks assigned pill)
+        document.querySelector('.table-schedule').addEventListener('click', (e) => {
+          const td = e.target.closest('td.slot');
+          if (!td) return;
+          // If click target is assigned cell, toggle unassign
+          if (td.dataset.status && td.dataset.status !== 'none') {
+            // if user holds ctrl/alt/shift you can provide different behavior; for now ask confirm
+            if (confirm('Remove this assigned non-working hour?')) {
+              applyAssignToSlots([td.dataset.key], 'none');
+            }
+          }
+        });
+
+        // Handle mouseup anywhere (in case release outside cell)
+        document.addEventListener('mouseup', () => {
+          if (isMouseDown && currentSelection.size > 0) {
+            isMouseDown = false;
+            finalizeSelection();
+            currentSelection.clear();
+            clearSelectVisuals();
+          }
+        });
+
+        // Prevent drag image or text selection interfering
+        document.addEventListener('dragstart', e => e.preventDefault());
+
+        updateActiveLabel();
+        updateTotals();
+
+        // Small note: If you want to pre-load assigned slots from server, you can call a function here
+        // that sets td.dataset.status and innerHTML accordingly (applyAssignToSlots with keys).
+    </script>
+</body>
+</html>

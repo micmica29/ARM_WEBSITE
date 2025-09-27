@@ -1,0 +1,285 @@
+﻿@page
+@model ARM_WEBSITE.Pages.AcademicHead.ScheduleOverviewModel
+@{
+    ViewData["Title"] = "Schedule Overview";
+    Layout = "_Layout1";
+}
+   <style>
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            height: calc(100% - 60px);
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ccc;
+            background: #fff;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 15px;
+        }
+
+        .tab-links {
+            display: flex;
+            gap: 20px;
+        }
+
+            .tab-links span {
+                cursor: pointer;
+                padding: 5px 10px;
+            }
+
+                .tab-links span.active {
+                    border-bottom: 3px solid #0047ab;
+                    color: #0047ab;
+                }
+
+        .print-btn {
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+        }
+
+        .schedule {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .schedule-header {
+            padding: 10px;
+            background: #f6f6f6;
+            font-weight: bold;
+            color: #0047ab;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #eee;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        th {
+            background: #fafafa;
+        }
+
+        td.time {
+            width: 80px;
+            background: #f9f9f9;
+            font-weight: bold;
+        }
+
+        .class-cell {
+            background: #ffeb3b;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .consultation {
+            background: #90caf9;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .admin {
+            background: #ef5350;
+            font-size: 11px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .sidebar-schedule {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+            .card:hover {
+                background: #f6f6f6;
+            }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #0047ab;
+        }
+    </style>
+<body>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab-links">
+                    <span id="tab-sections" class="active" onclick="switchTab('sections')">Sections</span>
+                    <span id="tab-rooms" onclick="switchTab('rooms')">Rooms</span>
+                    <span id="tab-professors" onclick="switchTab('professors')">Professors</span>
+                </div>
+                <span class="print-btn" onclick="printAllSchedules()">🖨️ Print</span>
+            </div>
+
+            <!-- Main Layout -->
+            <div class="container">
+                <!-- Schedule -->
+                <div id="schedule-display" class="schedule">
+                    <div id="schedule-title" class="schedule-header">BT601</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Monday</th>
+                                <th>Tuesday</th>
+                                <th>Wednesday</th>
+                                <th>Thursday</th>
+                                <th>Friday</th>
+                                <th>Saturday</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Sidebar for schedule cards -->
+                <div class="sidebar-schedule" id="sidebar-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const schedules = {
+            sections: {
+                "BT601": [
+                    { time: "7:00AM", day: "Monday", text: "Mobile Systems<br/>ROOM 201<br/>LESTER FRANCISCO", type: "class" },
+                    { time: "8:00AM", day: "Monday", text: "Programming Languages<br/>ROOM 202<br/>MIKE HULIP", type: "class" }
+                ],
+                "BT602": [
+                    { time: "7:00AM", day: "Tuesday", text: "Web Systems<br/>ROOM 404<br/>PRAX DONOR", type: "class" }
+                ]
+            },
+            rooms: {
+                "RM 201": [
+                    { time: "7:00AM", day: "Monday", text: "Mobile Systems<br/>ROOM 201<br/>LESTER FRANCISCO", type: "class" }
+                ],
+                "RM 404": [
+                    { time: "8:00AM", day: "Tuesday", text: "Web Systems<br/>ROOM 404<br/>PRAX DONOR", type: "class" }
+                ]
+            },
+            professors: {
+                "MIKE HULIP": [
+                    { time: "7:00AM", day: "Monday", text: "Mobile Systems<br/>ROOM 201<br/>MIKE HULIP", type: "class" },
+                    { time: "9:00AM", day: "Monday", text: "CONSULTATION", type: "consultation" },
+                    { time: "1:00PM", day: "Monday", text: "ADMIN", type: "admin" }
+                ],
+                "JESUS LAXAMANA": [
+                    { time: "8:00AM", day: "Tuesday", text: "Information Security<br/>ROOM 403<br/>JESUS LAXAMANA", type: "class" }
+                ]
+            }
+        };
+
+        let currentTab = "sections";
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll(".tab-links span").forEach(t => t.classList.remove("active"));
+            document.getElementById("tab-" + tab).classList.add("active");
+            loadSidebar();
+        }
+
+        function loadSidebar() {
+            const sidebar = document.getElementById("sidebar-list");
+            sidebar.innerHTML = "";
+            Object.keys(schedules[currentTab]).forEach(name => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.onclick = () => loadSchedule(name);
+                card.innerHTML = `<div class="card-title">${name}</div>`;
+                sidebar.appendChild(card);
+            });
+            const first = Object.keys(schedules[currentTab])[0];
+            loadSchedule(first);
+        }
+
+        function loadSchedule(name) {
+            document.getElementById("schedule-title").innerText = name;
+            const tbody = document.getElementById("schedule-body");
+            tbody.innerHTML = "";
+            const times = ["7:00AM","8:00AM","9:00AM","10:00AM","11:00AM","12:00PM","1:00PM","2:00PM","3:00PM","4:00PM","5:00PM"];
+            const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+            times.forEach(time => {
+                let row = `<tr><td class="time">${time}</td>`;
+                days.forEach(day => {
+                    const entry = schedules[currentTab][name].find(s => s.time === time && s.day === day);
+                    if (entry) {
+                        let cls = "class-cell";
+                        if (entry.type === "consultation") cls = "consultation";
+                        if (entry.type === "admin") cls = "admin";
+                        row += `<td class="${cls}">${entry.text}</td>`;
+                    } else {
+                        row += "<td></td>";
+                    }
+                });
+                row += "</tr>";
+                tbody.innerHTML += row;
+            });
+        }
+
+        function printAllSchedules() {
+            let html = "<h2>Schedules - " + currentTab.charAt(0).toUpperCase() + currentTab.slice(1) + "</h2>";
+            Object.keys(schedules[currentTab]).forEach(name => {
+                html += `<h3>${name}</h3><table border='1' style='border-collapse:collapse;width:100%;font-size:12px;text-align:center;'>
+                    <tr><th>Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th></tr>`;
+                const times = ["7:00AM","8:00AM","9:00AM","10:00AM","11:00AM","12:00PM","1:00PM","2:00PM","3:00PM","4:00PM","5:00PM"];
+                const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+                times.forEach(time => {
+                    html += `<tr><td>${time}</td>`;
+                    days.forEach(day => {
+                        const entry = schedules[currentTab][name].find(s => s.time === time && s.day === day);
+                        html += entry ? `<td>${entry.text}</td>` : "<td></td>";
+                    });
+                    html += "</tr>";
+                });
+                html += "</table><br/>";
+            });
+
+            const win = window.open("", "_blank");
+            win.document.write("<html><head><title>Print Schedules</title></head><body>" + html + "</body></html>");
+            win.document.close();
+            win.print();
+        }
+
+        loadSidebar();
+    </script>
+</body>

@@ -1,0 +1,440 @@
+﻿@page
+@model ARM_WEBSITE.Pages.ProgramHead.SubstitutionModel
+@{
+	ViewData["Title"] = "Substitution";
+	Layout = "_Layout2";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assign Substitute - Academic Resource Management</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background: #f8f9fc;
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 40px;
+            border-bottom: 2px solid #e1e5eb;
+            margin-bottom: 25px;
+        }
+
+        .tab-links span {
+            cursor: pointer;
+            font-weight: 600;
+            padding-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+            .tab-links span.active {
+                border-bottom: 3px solid #0047ab;
+                color: #0047ab;
+            }
+
+        /* Card box */
+        .card-box {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Search + button row */
+        .search-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+            .search-row input {
+                flex: 1;
+                border-radius: 8px;
+                padding: 12px 16px;
+                border: 1px solid #ccc;
+                font-size: 16px;
+            }
+
+        .save-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+            .save-btn:hover {
+                background: #218838;
+            }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        thead th {
+            background: #f1f3f9;
+            padding: 12px;
+            font-size: 14px;
+            text-align: center;
+            color: #444;
+        }
+
+        tbody tr {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        td {
+            padding: 12px;
+            font-size: 14px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+            td select {
+                border-radius: 6px;
+                padding: 6px;
+                font-size: 13px;
+            }
+
+        .sub-btn {
+            background: #0d6efd;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            .sub-btn:hover {
+                background: #0b5ed7;
+            }
+
+        .remove-btn {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            .remove-btn:hover {
+                background: #b02a37;
+            }
+
+        .autocomplete-list {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 2px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+            .autocomplete-item:hover,
+            .autocomplete-item.active {
+                background: #f0f4ff;
+            }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab-links">
+                <span id="tab-unassigned" class="active" onclick="switchTab('unassigned')">Unassigned Subjects</span>
+                <span id="tab-leave" onclick="switchTab('leave')">Professors on Leave</span>
+            </div>
+        </div>
+
+        <!-- Card box -->
+        <div class="card-box">
+            <!-- Search + Save Row -->
+            <div id="leave-header" class="search-row" style="display:none;">
+                <div class="position-relative" style="flex:1;">
+                    <input type="text" id="leave-search" placeholder="Search professor..." autocomplete="off" />
+                    <div id="autocomplete-list" class="autocomplete-list"></div>
+                </div>
+                <button id="saveAllBtn" class="save-btn" onclick="saveAll()">Save All</button>
+                <button id="clearAllBtn" class="remove-btn" onclick="clearAll()">Clear All</button>
+            </div>
+
+            <!-- Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Subject</th>
+                        <th>Assigned Professor</th>
+                        <th>Substitute Professor</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="class-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const unassignedData = [
+            { section: "BSIT 1A", subject: "Math in IT", professor: null },
+            { section: "BSIT 2B", subject: "Data Structures", professor: null }
+        ];
+
+        const leaveProfessors = {
+            "Prof. Cruz": [
+                { section: "BSIT 3A", subject: "Networking", professor: "Prof. Cruz" },
+                { section: "BSIT 3B", subject: "Database Systems", professor: "Prof. Cruz" }
+            ],
+            "Prof. Santos": [
+                { section: "BSIT 4A", subject: "Capstone Project", professor: "Prof. Santos" },
+                { section: "BSIT 4B", subject: "System Integration", professor: "Prof. Santos" }
+            ]
+        };
+
+        const professors = [
+            "Prof. Dela Cruz", "Prof. Reyes", "Prof. Villanueva", "Prof. Tan"
+        ];
+
+        let currentTab = "unassigned";
+        let currentLeaveProf = null;
+        let selectedSuggestionIndex = -1;
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll(".tab-links span").forEach(t => t.classList.remove("active"));
+            document.getElementById("tab-" + tab).classList.add("active");
+
+            document.getElementById("leave-header").style.display = tab === "leave" ? "flex" : "none";
+            document.getElementById("autocomplete-list").innerHTML = "";
+
+            loadTable();
+        }
+
+        function loadTable() {
+            const tbody = document.getElementById("class-table-body");
+            tbody.innerHTML = "";
+
+            if (currentTab === "unassigned") {
+                unassignedData.forEach((row, idx) => {
+                    let options = professors.map(p =>
+                        `<option value="${p}" ${row.professor === p ? "selected" : ""}>${p}</option>`
+                    ).join("");
+
+                    tbody.innerHTML += `<tr>
+                        <td>${row.section}</td>
+                        <td>${row.subject}</td>
+                        <td>${row.professor ?? "<i>None</i>"}</td>
+                        <td>
+                            <select id="prof-${idx}">
+                                <option value="">-- Select Professor --</option>
+                                ${options}
+                            </select>
+                        </td>
+                        <td>
+                            <button class="sub-btn" onclick="assignProfessor(${idx}, 'unassigned')">Substitute</button>
+                            <button class="remove-btn" onclick="removeUnassigned(${idx})">Remove</button>
+                        </td>
+                    </tr>`;
+                });
+            } else if (currentTab === "leave") {
+                if (currentLeaveProf) loadLeaveSchedule(currentLeaveProf);
+            }
+        }
+
+        function showSuggestions() {
+            const input = document.getElementById("leave-search");
+            const list = document.getElementById("autocomplete-list");
+            const query = input.value.toLowerCase();
+            list.innerHTML = "";
+            selectedSuggestionIndex = -1;
+
+            if (!query) return;
+
+            const matches = Object.keys(leaveProfessors).filter(name =>
+                name.toLowerCase().includes(query)
+            );
+
+            matches.forEach((name, idx) => {
+                let item = document.createElement("div");
+                item.className = "autocomplete-item";
+                item.innerText = name;
+                item.onclick = () => {
+                    input.value = name;
+                    list.innerHTML = "";
+                    loadLeaveSchedule(name);
+                };
+                list.appendChild(item);
+            });
+
+            if (matches.length === 1 && matches[0].toLowerCase() === query) {
+                input.value = matches[0];
+                list.innerHTML = "";
+                loadLeaveSchedule(matches[0]);
+            }
+        }
+
+        document.getElementById("leave-search").addEventListener("keyup", (e) => {
+            const list = document.getElementById("autocomplete-list");
+            const items = list.getElementsByClassName("autocomplete-item");
+
+            if (e.key === "ArrowDown") {
+                selectedSuggestionIndex = (selectedSuggestionIndex + 1) % items.length;
+                updateActiveSuggestion(items);
+            } else if (e.key === "ArrowUp") {
+                selectedSuggestionIndex = (selectedSuggestionIndex - 1 + items.length) % items.length;
+                updateActiveSuggestion(items);
+            } else if (e.key === "Enter") {
+                if (selectedSuggestionIndex >= 0 && items[selectedSuggestionIndex]) {
+                    items[selectedSuggestionIndex].click();
+                } else {
+                    showSuggestions();
+                }
+            } else {
+                showSuggestions();
+            }
+        });
+
+        function updateActiveSuggestion(items) {
+            Array.from(items).forEach(item => item.classList.remove("active"));
+            if (items[selectedSuggestionIndex]) {
+                items[selectedSuggestionIndex].classList.add("active");
+            }
+        }
+
+        function loadLeaveSchedule(profName) {
+            currentLeaveProf = profName;
+            const tbody = document.getElementById("class-table-body");
+            tbody.innerHTML = "";
+
+            leaveProfessors[profName].forEach((row, idx) => {
+                let options = professors.map(p =>
+                    `<option value="${p}" ${row.professor !== profName && row.professor === p ? "selected" : ""}>${p}</option>`
+                ).join("");
+
+                tbody.innerHTML += `<tr>
+                    <td>${row.section}</td>
+                    <td>${row.subject}</td>
+                    <td>${row.professor}</td>
+                    <td>
+                        <select id="leave-prof-${idx}">
+                            <option value="">-- Select Substitute --</option>
+                            ${options}
+                        </select>
+                    </td>
+                    <td>
+                        <button class="sub-btn" onclick="assignLeaveProfessor(${idx})">Substitute</button>
+                        <button class="remove-btn" onclick="removeSubstitute(${idx})">Remove</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function assignProfessor(index, tabType) {
+            if (tabType === "unassigned") {
+                const select = document.getElementById("prof-" + index);
+                const selectedProf = select.value;
+                if (selectedProf) {
+                    unassignedData[index].professor = selectedProf;
+                    loadTable();
+                }
+            }
+        }
+
+        function assignLeaveProfessor(idx) {
+            const select = document.getElementById("leave-prof-" + idx);
+            const selectedProf = select.value;
+            if (selectedProf) {
+                leaveProfessors[currentLeaveProf][idx].professor = selectedProf;
+                loadLeaveSchedule(currentLeaveProf);
+            }
+        }
+
+        function saveAll() {
+            if (!currentLeaveProf) {
+                alert("Please search and select a professor first.");
+                return;
+            }
+            const subjects = leaveProfessors[currentLeaveProf];
+            subjects.forEach((row, idx) => {
+                const select = document.getElementById("leave-prof-" + idx);
+                if (select && select.value) {
+                    row.professor = select.value;
+                }
+            });
+            alert("All substitutions saved for " + currentLeaveProf);
+            loadLeaveSchedule(currentLeaveProf);
+        }
+
+        function removeSubstitute(idx) {
+            if (confirm("Are you sure you want to remove this substitute?")) {
+                if (currentLeaveProf) {
+                    leaveProfessors[currentLeaveProf][idx].professor = currentLeaveProf;
+                    loadLeaveSchedule(currentLeaveProf);
+                }
+            }
+        }
+
+        function removeUnassigned(idx) {
+            if (confirm("Are you sure you want to remove this professor assignment?")) {
+                unassignedData[idx].professor = null;
+                loadTable();
+            }
+        }
+
+        function clearAll() {
+            if (!currentLeaveProf) {
+                alert("Please search and select a professor first.");
+                return;
+            }
+            if (confirm("Are you sure you want to clear all substitutes for " + currentLeaveProf + "?")) {
+                leaveProfessors[currentLeaveProf].forEach(row => {
+                    row.professor = currentLeaveProf;
+                });
+                alert("All substitutes cleared for " + currentLeaveProf);
+                loadLeaveSchedule(currentLeaveProf);
+            }
+        }
+
+        loadTable();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,243 @@
+﻿@page
+@model ARM_WEBSITE.Pages.AcademicHead.AddSectionModel
+@{
+    ViewData["Title"] = "Add Section";
+    Layout = "_Layout1";
+}
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .year-container {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+            .section span {
+                font-weight: bold;
+            }
+
+        .btn-action {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .btn-view {
+            background: #198754;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+        }
+
+        .btn-schedule {
+            background: #0d6efd;
+        }
+
+        .btn-action + .btn-action {
+            margin-left: 10px;
+        }
+    </style>
+
+    <div class="mt-4 px-4">
+        <h2 class="mb-3">Class Schedule</h2>
+
+        <!-- Step 1-3 -->
+        <div class="row g-3 align-items-end mb-4">
+            <!-- Program -->
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Select Program:</label>
+                <select id="programSelect" class="form-select" onchange="showSchoolYearDropdown()">
+                    <option value="">-- Select Program --</option>
+                    <option value="bsit">BSIT - Information Technology</option>
+                    <option value="bscs">BSCS - Computer Science</option>
+                </select>
+            </div>
+
+            <!-- School Year Dropdown -->
+            <div class="col-md-4 hidden" id="schoolYearContainer">
+                <label class="form-label fw-bold">Select School Year:</label>
+                <select id="schoolYearSelect" class="form-select" onchange="showTermSelect()">
+                    <option value="">-- Select School Year --</option>
+                    <option value="2022-2023">2022-2023</option>
+                    <option value="2023-2024">2023-2024</option>
+                    <option value="2024-2025">2024-2025</option>
+                </select>
+            </div>
+
+            <!-- Term Dropdown -->
+            <div class="col-md-4 hidden" id="termContainer">
+                <label class="form-label fw-bold">Select Term:</label>
+                <select id="termSelect" class="form-select" onchange="showSectionsByTerm()">
+                    <option value="">-- Select Term --</option>
+                    <option value="1st">1st Term</option>
+                    <option value="2nd">2nd Term</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Year Levels -->
+        <div id="yearLevelsContainer" class="hidden">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="year-container">
+                        <h5>1st Year</h5>
+                        <div id="year1Sections"></div>
+                        <button class="btn btn-success btn-sm" onclick="openAddModal('year1Sections')">+ Add Section</button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="year-container">
+                        <h5>2nd Year</h5>
+                        <div id="year2Sections"></div>
+                        <button class="btn btn-success btn-sm" onclick="openAddModal('year2Sections')">+ Add Section</button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="year-container">
+                        <h5>3rd Year</h5>
+                        <div id="year3Sections"></div>
+                        <button class="btn btn-success btn-sm" onclick="openAddModal('year3Sections')">+ Add Section</button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="year-container">
+                        <h5>4th Year</h5>
+                        <div id="year4Sections"></div>
+                        <button class="btn btn-success btn-sm" onclick="openAddModal('year4Sections')">+ Add Section</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Section Modal -->
+    <div class="modal fade" id="sectionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Class Schedule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Section Code</label>
+                    <input type="text" class="form-control" id="sectionCode" placeholder="e.g., IT1101" />
+                    <div id="errorMsg" class="text-danger small mt-2"></div>
+                    <input type="hidden" id="targetYear" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitSection()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showSchoolYearDropdown() {
+          const program = document.getElementById("programSelect").value;
+          document.getElementById("schoolYearContainer").classList.toggle("hidden", !program);
+          document.getElementById("yearLevelsContainer").classList.add("hidden");
+          document.getElementById("termContainer").classList.add("hidden");
+        }
+
+        function showTermSelect() {
+          const schoolYear = document.getElementById("schoolYearSelect").value;
+          document.getElementById("termContainer").classList.toggle("hidden", !schoolYear);
+          document.getElementById("yearLevelsContainer").classList.add("hidden");
+        }
+
+        function showSectionsByTerm() {
+          const term = document.getElementById("termSelect").value;
+
+          const sections = {
+            "1st": {
+              "year1": ["IT1101", "IT1102"],
+              "year2": ["IT2201", "IT2202"],
+              "year3": ["IT3301", "IT3302"],
+              "year4": ["IT4401", "IT4402"]
+            },
+            "2nd": {
+              "year1": ["IT1103", "IT1104"],
+              "year2": ["IT2203", "IT2204"],
+              "year3": ["IT3303", "IT3304"],
+              "year4": ["IT4403", "IT4404"]
+            }
+          };
+
+          const selectedSections = sections[term] || {};
+
+          displaySections('year1Sections', selectedSections.year1 || []);
+          displaySections('year2Sections', selectedSections.year2 || []);
+          displaySections('year3Sections', selectedSections.year3 || []);
+          displaySections('year4Sections', selectedSections.year4 || []);
+
+          document.getElementById("yearLevelsContainer").classList.remove("hidden");
+        }
+
+        function displaySections(year, sections) {
+          const container = document.getElementById(year);
+          container.innerHTML = '';
+          sections.forEach(code => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.classList.add('section');
+            sectionDiv.innerHTML = `<span>${code}</span>
+              <div>
+                <button class="btn-action btn-view">View</button>
+                <button class="btn-action btn-delete">Delete</button>
+                <a href="/AcademicHead/CreateSchedule" class="btn-action btn-schedule">Schedule</a>
+              </div>`;
+            container.appendChild(sectionDiv);
+          });
+        }
+
+        function openAddModal(year) {
+          document.getElementById("targetYear").value = year;
+          new bootstrap.Modal(document.getElementById("sectionModal")).show();
+        }
+
+        function submitSection() {
+          const sectionCode = document.getElementById("sectionCode").value.trim();
+          const targetYear = document.getElementById("targetYear").value;
+
+          if (!sectionCode) {
+            document.getElementById("errorMsg").textContent = "Section code is required.";
+            return;
+          }
+
+          const sectionDiv = document.createElement('div');
+          sectionDiv.classList.add('section');
+          sectionDiv.innerHTML = `<span>${sectionCode}</span>
+            <div>
+              <button class="btn-action btn-view">View</button>
+              <button class="btn-action btn-delete">Delete</button>
+              <a href="/AcademicHead/CreateSchedule" class="btn-action btn-schedule">Schedule</a>
+            </div>`;
+
+          document.getElementById(targetYear).appendChild(sectionDiv);
+          const modal = bootstrap.Modal.getInstance(document.getElementById("sectionModal"));
+          modal.hide();
+          document.getElementById("sectionCode").value = "";
+          document.getElementById("errorMsg").textContent = "";
+        }
+    </script>
+

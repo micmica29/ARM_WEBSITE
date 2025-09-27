@@ -1,0 +1,56 @@
+﻿@page
+@model ARM_WEBSITE.Pages.ProgramHead.ReservationModel
+@{
+	ViewData["Title"] = "Reservation";
+	Layout = "_Layout2";
+}
+
+<style>
+
+    .reservation-table th,
+    .reservation-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .reservation-table thead {
+        background-color: #f8f9fa;
+    }
+
+    .btn:focus,
+    .btn:active {
+        box-shadow: none !important;
+    }
+</style>
+
+    <h4 class="fw-bold text-dark mb-3">Details</h4>
+
+    <div class="table-responsive">
+        <table class="table table-bordered reservation-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Slot Timing</th>
+                    <th>Room</th>
+                    <th>Notes</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>MIKE HULIP</strong></td>
+                    <td><strong>February 26, 2025</strong></td>
+                    <td><strong>2:00 PM - 4:00 PM</strong></td>
+                    <td><strong>RM 202</strong></td>
+                    <td><strong>The aircon...</strong></td>
+                    <td>
+                        <button class="btn btn-success btn-sm me-1">Approve</button>
+                        <button class="btn btn-danger btn-sm">Decline</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+

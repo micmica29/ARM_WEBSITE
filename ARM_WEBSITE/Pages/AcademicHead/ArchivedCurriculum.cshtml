@@ -1,0 +1,149 @@
+﻿@page
+@model ARM_WEBSITE.Pages.AcademicHead.ArchivedCurriculumModel
+@{
+    ViewData["Title"] = "ArchivedCurriculum";
+    Layout = "_Layout1";
+}
+    <style>
+        .main-area { flex: 1; display: flex; height: calc(100% - 60px); }
+
+        .content { flex: 1; padding: 20px; height: 100%; overflow-y: auto; }
+
+        .tabs {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold; padding: 10px 20px; border-bottom: 1px solid #ccc;
+            background: #fff; border-radius: 8px 8px 0 0; margin-bottom: 15px;
+        }
+        .tab-links { display: flex; gap: 20px; }
+        .tab-links span { cursor: pointer; padding: 5px 10px; }
+        .tab-links span.active { border-bottom: 3px solid #0047ab; color: #0047ab; }
+
+        .container {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+        }
+
+        .curriculum {
+            border: 1px solid #ddd; border-radius: 8px;
+            background: #fff; overflow: hidden;
+        }
+        .curriculum-header {
+            padding: 10px; background: #f6f6f6;
+            font-weight: bold; color: #0047ab;
+        }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td {
+            border: 1px solid #eee; text-align: center;
+            padding: 6px; font-size: 12px;
+        }
+        th { background: #fafafa; }
+        td.year { width: 100px; background: #f9f9f9; font-weight: bold; }
+
+        .sidebar-batch { display: flex; flex-direction: column; gap: 15px; }
+        .card {
+            border: 1px solid #ddd; border-radius: 6px; padding: 10px;
+            font-size: 12px; background: #fff; cursor: pointer;
+        }
+        .card:hover { background: #f6f6f6; }
+        .card-title {
+            font-weight: bold; margin-bottom: 8px; color: #0047ab;
+        }
+    </style>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab-links">
+                    <span id="tab-bsit" class="active" onclick="switchProgram('bsit')">BSIT</span>
+                    <span id="tab-bscs" onclick="switchProgram('bscs')">BSCS</span>
+                </div>
+            </div>
+
+            <!-- Main Layout -->
+            <div class="container">
+                <!-- Curriculum Table -->
+                <div id="curriculum-display" class="curriculum">
+                    <div id="curriculum-title" class="curriculum-header">BSIT - Batch 2020</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year Level</th>
+                                <th>Subjects</th>
+                            </tr>
+                        </thead>
+                        <tbody id="curriculum-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Sidebar for Batch Years -->
+                <div class="sidebar-batch" id="batch-list"></div>
+            </div>
+        </div>
+
+    <script>
+        const curriculums = {
+            bsit: {
+                "Batch 2020": {
+                    "Year 1": ["Intro to IT", "Programming 1", "Math in IT"],
+                    "Year 2": ["Data Structures", "Web Dev 1", "Database Systems"],
+                    "Year 3": ["Mobile Systems", "Networking", "Operating Systems"],
+                    "Year 4": ["Capstone Project", "Systems Integration", "IT Electives"]
+                },
+                "Batch 2021": {
+                    "Year 1": ["Computer Fundamentals", "Programming 1", "Discrete Math"],
+                    "Year 2": ["OOP", "Web Dev 2", "Database Management"],
+                    "Year 3": ["Software Engineering", "Networking", "Human-Computer Interaction"],
+                    "Year 4": ["Capstone 2", "IT Project Management", "Emerging Tech"]
+                }
+            },
+            bscs: {
+                "Batch 2020": {
+                    "Year 1": ["CS Fundamentals", "Programming 1", "Calculus"],
+                    "Year 2": ["Algorithms", "Web Dev", "Database"],
+                    "Year 3": ["AI Fundamentals", "Operating Systems", "Computer Architecture"],
+                    "Year 4": ["Capstone Project", "Compiler Design", "CS Electives"]
+                }
+            }
+        };
+
+        let currentProgram = "bsit";
+        let currentBatch = "Batch 2020";
+
+        function switchProgram(program) {
+            currentProgram = program;
+            document.querySelectorAll(".tab-links span").forEach(t => t.classList.remove("active"));
+            document.getElementById("tab-" + program).classList.add("active");
+            loadBatchList();
+        }
+
+        function loadBatchList() {
+            const batchSidebar = document.getElementById("batch-list");
+            batchSidebar.innerHTML = "";
+            Object.keys(curriculums[currentProgram]).forEach(batch => {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.onclick = () => loadCurriculum(batch);
+                card.innerHTML = `<div class="card-title">${batch}</div>`;
+                batchSidebar.appendChild(card);
+            });
+            const firstBatch = Object.keys(curriculums[currentProgram])[0];
+            loadCurriculum(firstBatch);
+        }
+
+        function loadCurriculum(batch) {
+            currentBatch = batch;
+            document.getElementById("curriculum-title").innerText =
+                currentProgram.toUpperCase() + " - " + batch;
+            const tbody = document.getElementById("curriculum-body");
+            tbody.innerHTML = "";
+            const years = ["Year 1", "Year 2", "Year 3", "Year 4"];
+            years.forEach(year => {
+                let row = `<tr><td class="year">${year}</td><td>${curriculums[currentProgram][batch][year].join(", ")}</td></tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        loadBatchList();
+    </script>

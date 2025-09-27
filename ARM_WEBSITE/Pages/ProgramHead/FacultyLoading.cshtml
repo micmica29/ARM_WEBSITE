@@ -1,0 +1,127 @@
+﻿@page
+@model ARM_WEBSITE.Pages.ProgramHead.FacultyLoadingModel
+@{
+	ViewData["Title"] = "Faculty Loading";
+	Layout = "_Layout2";
+}
+<style>
+
+    /* Main area layout */
+    .main-area {
+        flex: 1;
+        display: flex;
+        height: calc(100% - 60px);
+    }
+
+    /* Content area */
+    .content {
+        flex: 1;
+        padding: 20px;
+        font-size: 18px;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    /* Faculty Table */
+    .faculty-table th {
+        background-color: #f8f9fa;
+        text-transform: uppercase;
+    }
+
+    .faculty-table td, .faculty-table th {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .add-btn {
+        font-size: 18px;
+        padding: 6px 14px;
+        border-radius: 6px;
+        background: green;
+        color: #fff;
+    }
+</style>
+
+<!-- Content -->
+<div class="content">
+    <h4 class="fw-bold mb-3">Faculty Loading</h4>
+
+    <!-- Top buttons -->
+    <div class="d-flex justify-content-between mb-3">
+        <button class="btn btn-warning" id="sortBtn">Sort</button>
+        <a asp-page="/ProgramHead/AddFaculty" class="btn btn-primary add-btn">
+            + Add Faculty
+        </a>
+    </div>
+
+    <!-- Faculty Table -->
+    <table class="table table-bordered table-hover faculty-table shadow-sm" id="facultyTable">
+        <thead>
+            <tr>
+                <th>Professor</th>
+                <th>Shift</th>
+                <th>Units</th>
+                <th>Non-Working Hours</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>MIKE HULIP</td>
+                <td>FULL-TIME</td>
+                <td>8</td>
+                <td>
+                    <a asp-page="/ProgramHead/NonWorkingHours" class="btn btn-secondary btn-sm">🕒 Assign</a>
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm">👁 View</button>
+                    <button class="btn btn-info btn-sm">✏ Edit</button>
+                    <button class="btn btn-danger btn-sm">🗑 Archive</button>
+                </td>
+            </tr>
+            <tr>
+                <td>JIMMY JOVERO</td>
+                <td>FULL-TIME</td>
+                <td>24</td>
+                <td>
+                    <a asp-page="/NonWorkingHours" class="btn btn-secondary btn-sm">🕒 Assign</a>
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm">👁 View</button>
+                    <button class="btn btn-info btn-sm">✏ Edit</button>
+                    <button class="btn btn-danger btn-sm">🗑 Archive</button>
+                </td>
+            </tr>
+            <tr>
+                <td>WINCHESTER PASTOLERO</td>
+                <td>FULL-TIME</td>
+                <td>24</td>
+                <td>
+                    <a asp-page="/NonWorkingHours" class="btn btn-secondary btn-sm">🕒 Assign</a>
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm">👁 View</button>
+                    <button class="btn btn-info btn-sm">✏ Edit</button>
+                    <button class="btn btn-danger btn-sm">🗑 Archive</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Simple sort example (by Professor name)
+    document.getElementById("sortBtn").addEventListener("click", function () {
+        let table = document.getElementById("facultyTable").getElementsByTagName("tbody")[0];
+        let rows = Array.from(table.rows);
+
+        rows.sort((a, b) => {
+            let nameA = a.cells[0].innerText.toLowerCase();
+            let nameB = a.cells[0].innerText.toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+
+        rows.forEach(row => table.appendChild(row));
+    });
+</script>
+

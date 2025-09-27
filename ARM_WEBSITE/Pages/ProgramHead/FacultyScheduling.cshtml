@@ -1,0 +1,177 @@
+﻿@page
+@model ARM_WEBSITE.Pages.ProgramHead.FacultySchedulingModel
+@{
+    ViewData["Title"] = "Faculty Scheduling";
+    Layout = "_Layout2";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faculty Scheduling</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .page-title {
+            text-align: left;
+            color: #000;
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .year-container {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .year-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 15px;
+        }
+
+        .section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+            .section span {
+                font-weight: bold;
+            }
+
+        .btn-action {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .btn-view {
+            background: #198754;
+        }
+
+        .btn-assign {
+            background: #0d6efd;
+        }
+
+        .btn-action + .btn-action {
+            margin-left: 10px;
+        }
+
+        .program-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+            .program-tabs button {
+                padding: 10px 20px;
+                border-radius: 8px;
+                border: 1.5px solid #0d6efd;
+                background: #fff;
+                color: #0d6efd;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease-in-out;
+            }
+
+                .program-tabs button.active {
+                    background: #0d6efd;
+                    color: #fff;
+                }
+
+                .program-tabs button:hover {
+                    background: #e7f1ff;
+                }
+
+        .year-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-4">
+        <h2 class="page-title">Faculty Scheduling</h2>
+
+        <!-- Program Tabs -->
+        <div class="program-tabs">
+            <button class="active" onclick="setActive(this, 'bsit')">BSIT</button>
+            <button onclick="setActive(this, 'bscs')">BSCS</button>
+            <button onclick="setActive(this, 'bsis')">BSIS</button>
+        </div>
+
+        <!-- Year Levels -->
+        <div id="bsit" class="year-levels">
+            <div class="year-container" id="bsit1">
+                <h2>1st Year</h2>
+                <div class="section">
+                    <span>IT1101</span>
+                    <div>
+                        <button class="btn-action btn-view">View</button>
+                        <a asp-page="/ProgramHead/AssignFaculty" class="btn-action btn-assign">Assign</a>
+                    </div>
+                </div>
+                <div class="section">
+                    <span>IT1102</span>
+                    <div>
+                        <button class="btn-action btn-view">View</button>
+                        <button class="btn-action btn-assign">Assign</button>
+                    </div>
+                </div>
+            </div>
+            <div class="year-container" id="bsit2">
+                <h2>2nd Year</h2>
+                <div class="section">
+                    <span>IT2101</span>
+                    <div>
+                        <button class="btn-action btn-view">View</button>
+                        <button class="btn-action btn-assign">Assign</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="bscs" class="year-levels" style="display:none;">
+            <div class="year-container" id="bscs1">
+                <h2>1st Year</h2>
+                <div class="section">
+                    <span>CS1101</span>
+                    <div>
+                        <button class="btn-action btn-view">View</button>
+                        <button class="btn-action btn-assign">Assign</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setActive(btn, programId) {
+            document.querySelectorAll('.program-tabs button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.year-levels').forEach(y => y.style.display = 'none');
+            document.getElementById(programId).style.display = 'grid';
+        }
+    </script>
+</body>
+</html>
