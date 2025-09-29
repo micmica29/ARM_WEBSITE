@@ -4,7 +4,6 @@
     ViewData["Title"] = "Curriculum";
     Layout = "_Layout1";
 }
-
     <style>
         body {
             background-color: #f8f9fa;
@@ -87,30 +86,30 @@
     <div class="container mt-4">
         <h2 class="mb-3">Curriculum</h2>
 
-        <!-- Program + Batch Year -->
+        <!-- Program + Curriculum Year -->
         <div class="row mb-4 align-items-end">
             <div class="col-md-4">
                 <label class="form-label fw-bold">Select Program:</label>
-                <select id="programSelect" class="form-select" onchange="showBatchYearRow()">
+                <select id="programSelect" class="form-select" onchange="showCurriculumYearRow()">
                     <option value="">-- Select Program --</option>
                     <option value="bsit">BSIT - Information Technology</option>
                     <option value="bscs">BSCS - Computer Science</option>
                 </select>
             </div>
 
-            <div class="col-md-4 d-none" id="batchYearCol">
-                <label class="form-label fw-bold">Select Batch Year:</label>
-                <select id="batchYearSelect" class="form-select" onchange="showCurriculum()">
-                    <option value="">-- Select Batch Year --</option>
+            <div class="col-md-4 d-none" id="curriculumYearCol">
+                <label class="form-label fw-bold">Select Curriculum Year:</label>
+                <select id="curriculumYearSelect" class="form-select" onchange="showCurriculum()">
+                    <option value="">-- Select Curriculum Year --</option>
                     <option value="2022">2022 Curriculum</option>
                     <option value="2023">2023 Curriculum</option>
                     <option value="2024">2024 Curriculum</option>
                 </select>
             </div>
 
-            <div class="col-md-4 text-end d-none" id="addBatchBtnCol">
-                <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addBatchModal">
-                    + Add Batch Year
+            <div class="col-md-4 text-end d-none" id="addCurriculumBtnCol">
+                <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#addCurriculumModal">
+                    + Add Curriculum Year
                 </button>
             </div>
         </div>
@@ -120,19 +119,19 @@
             <div id="yearsContainer"></div>
         </div>
 
-        <button id="archiveBtn" class="archive-btn" onclick="showArchiveConfirm()">📦 Archive Batch Year</button>
+        <button id="archiveBtn" class="archive-btn" onclick="showArchiveConfirm()">📦 Archive Curriculum Year</button>
     </div>
 
-    <!-- Add Batch Year Modal -->
-    <div class="modal fade" id="addBatchModal" tabindex="-1">
+    <!-- Add Curriculum Year Modal -->
+    <div class="modal fade" id="addCurriculumModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Batch Year</h5>
+                    <h5 class="modal-title">Add Curriculum Year</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addBatchForm">
+                    <form id="addCurriculumForm">
                         <div class="mb-3">
                             <label class="form-label">Program</label>
                             <select id="modalProgramSelect" class="form-select" required>
@@ -142,14 +141,14 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Batch Year</label>
-                            <input type="text" class="form-control" id="modalBatchYear" placeholder="e.g., 2025" required />
+                            <label class="form-label">Curriculum Year</label>
+                            <input type="text" class="form-control" id="modalCurriculumYear" placeholder="e.g., 2025" required />
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" onclick="submitAddBatch()">Submit</button>
+                    <button class="btn btn-primary" onclick="submitAddCurriculum()">Submit</button>
                 </div>
             </div>
         </div>
@@ -242,18 +241,18 @@
         const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
         const terms = ["First Term", "Second Term"];
 
-        function showBatchYearRow() {
+        function showCurriculumYearRow() {
           const program = document.getElementById("programSelect").value;
-          document.getElementById("batchYearCol").classList.toggle("d-none", !program);
-          document.getElementById("addBatchBtnCol").classList.toggle("d-none", !program);
+          document.getElementById("curriculumYearCol").classList.toggle("d-none", !program);
+          document.getElementById("addCurriculumBtnCol").classList.toggle("d-none", !program);
           document.getElementById("curriculumContainer").classList.add("d-none");
           if (program) document.getElementById("modalProgramSelect").value = program;
         }
 
         function showCurriculum() {
-          const batchYear = document.getElementById("batchYearSelect").value;
+          const curriculumYear = document.getElementById("curriculumYearSelect").value;
           const program = document.getElementById("programSelect").value;
-          if (!batchYear || !program) return;
+          if (!curriculumYear || !program) return;
 
           const yearsContainer = document.getElementById("yearsContainer");
           yearsContainer.innerHTML = "";
@@ -301,44 +300,44 @@
           alert(`✅ Year ${yearIndex} subjects have been saved successfully!`);
         }
 
-        function submitAddBatch() {
+        function submitAddCurriculum() {
           const program = document.getElementById("modalProgramSelect").value;
-          const batchYear = document.getElementById("modalBatchYear").value.trim();
-          if (!program || !batchYear) return alert("Select program and enter batch year!");
+          const curriculumYear = document.getElementById("modalCurriculumYear").value.trim();
+          if (!program || !curriculumYear) return alert("Select program and enter curriculum year!");
 
-          const batchSelect = document.getElementById("batchYearSelect");
-          const exists = Array.from(batchSelect.options).some(opt => opt.value === batchYear);
-          if (exists) return alert("Batch year already exists!");
+          const curriculumSelect = document.getElementById("curriculumYearSelect");
+          const exists = Array.from(curriculumSelect.options).some(opt => opt.value === curriculumYear);
+          if (exists) return alert("Curriculum year already exists!");
 
           const option = document.createElement("option");
-          option.value = batchYear;
-          option.textContent = `${batchYear} Curriculum`;
-          batchSelect.appendChild(option);
+          option.value = curriculumYear;
+          option.textContent = `${curriculumYear} Curriculum`;
+          curriculumSelect.appendChild(option);
 
           document.getElementById("programSelect").value = program;
-          batchSelect.value = batchYear;
+          curriculumSelect.value = curriculumYear;
 
-          showBatchYearRow();
+          showCurriculumYearRow();
           showCurriculum();
-          bootstrap.Modal.getInstance(document.getElementById("addBatchModal")).hide();
+          bootstrap.Modal.getInstance(document.getElementById("addCurriculumModal")).hide();
         }
 
         function showArchiveConfirm() {
           const program = document.getElementById("programSelect").value;
-          const batchYear = document.getElementById("batchYearSelect").value;
+          const curriculumYear = document.getElementById("curriculumYearSelect").value;
           document.getElementById("archiveConfirmText").textContent =
-            `Archive the entire curriculum for ${batchYear} (${program.toUpperCase()})?`;
+            `Archive the entire curriculum for ${curriculumYear} (${program.toUpperCase()})?`;
           new bootstrap.Modal(document.getElementById("archiveConfirmModal")).show();
         }
 
         document.getElementById("confirmArchiveBtn").addEventListener("click", () => {
-          const batchSelect = document.getElementById("batchYearSelect");
-          const batchYear = batchSelect.value;
-          const optionToRemove = Array.from(batchSelect.options).find(opt => opt.value === batchYear);
+          const curriculumSelect = document.getElementById("curriculumYearSelect");
+          const curriculumYear = curriculumSelect.value;
+          const optionToRemove = Array.from(curriculumSelect.options).find(opt => opt.value === curriculumYear);
           if (optionToRemove) optionToRemove.remove();
           document.getElementById("yearsContainer").innerHTML = "";
           document.getElementById("curriculumContainer").classList.add("d-none");
-          batchSelect.value = "";
+          curriculumSelect.value = "";
           bootstrap.Modal.getInstance(document.getElementById("archiveConfirmModal")).hide();
         });
 
